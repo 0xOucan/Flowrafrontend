@@ -1,11 +1,11 @@
 # 🌿 Flowra — Plant your crypto, grow impact.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/flowra)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/0xOucan/Flowrafrontend)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Built with Next.js](https://img.shields.io/badge/Built%20with-Next.js%2016-000000?logo=next.js)](https://nextjs.org/)
 [![Styled with Tailwind](https://img.shields.io/badge/Styled%20with-Tailwind%20CSS-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
 
-Flowra is a **futuristic DeFi dApp** that automates **DCA (Dollar-Cost Averaging)** crypto investing, generates yield through **Aave** and **Uniswap Hooks**, and **auto-donates part of the yield** to social or open-source projects.
+Flowra is a **futuristic DeFi dApp** that automates **DCA (Dollar-Cost Averaging)** crypto investing via **Uniswap Hooks**, generates yield through **Aave**, and **auto-donates part of the yield** to social or open-source projects.
 All progress is visualized through a **3D hydroponic tower** built with **Three.js** — every lettuce represents a project growing from your yield.
 
 > **Note**: This is currently a demo/mockup showcasing the UI and user experience. Smart contract integration is in development.
@@ -14,12 +14,13 @@ All progress is visualized through a **3D hydroponic tower** built with **Three.
 
 ## ✨ Features
 
-- 🌱 **Automated DCA investing** with customizable frequency and assets
-- 💧 **Yield generation** via Aave v3 & Uniswap v4 Hooks
-- 🎁 **Automatic donations** from a fraction of earned yield
-- 🛰️ **3D Hydroponic Tower Visualization** powered by Three.js
-- 🔐 **Non-custodial & transparent** smart contract interaction
-- 🧬 **Spaceship-inspired UI** with glitchy, dystopian design vibes
+- 🌱 **Automated DCA investing** with micro-trades executed via Uniswap Hooks for optimal average pricing
+- 💧 **Yield generation** via Aave v3 with configurable APY strategies
+- 🎁 **Automatic donations** from 1-20% of earned yield to regenerative projects
+- 🛰️ **3D Hydroponic Tower Visualization** powered by Three.js with real-time growth tracking
+- 📊 **Active Strategy Monitoring** with color-coded progress bars and 6-digit hash IDs
+- 🔐 **Non-custodial & transparent** smart contract interaction (Arbitrum ready)
+- 🧬 **Spaceship-inspired UI** with dark cyberpunk aesthetic and glowing effects
 
 ---
 
@@ -60,8 +61,8 @@ Flowra automates this entire journey:
 
 ### 1️⃣ Clone the repo
 ```bash
-git clone https://github.com/yourusername/flowra.git
-cd flowra
+git clone https://github.com/0xOucan/Flowrafrontend.git
+cd Flowrafrontend
 ```
 
 ### 2️⃣ Install dependencies
@@ -105,6 +106,32 @@ Every harvest cycle reinvests profits and channels a fraction to donations — *
 
 ---
 
+## 🎨 Recent UI Improvements
+
+### Streamlined DCA Wizard (6 Steps)
+- **Network Selection**: Arbitrum live, Ethereum & Base coming soon (grayed out)
+- **Token Selection**: Clean interface without unnecessary badges
+  - **Input**: USDC, USDT, DAI, GHO (whitelisted stablecoins)
+  - **Output**: WETH, WBTC, UNI, ARB
+- **Simplified Investment**: Removed frequency selection - automated via Uniswap Hooks
+  - Quick amount buttons: $10, $100, $250, $500, $1000
+  - Automated micro-trades for optimal average pricing
+- **Impact Range**: 1-20% donation slider
+- **Default Project**: Flowra (Web3, Public Good) pre-selected
+- **Enhanced Review**: Shows Annual/Monthly/Daily impact estimates with APY calculations
+
+### Active Strategy Dashboard
+- **Progress Tracking**: Color-coded progress bars with token-specific colors
+  - USDC → WBTC (Blue `#2775ca`)
+  - USDC → WETH (Purple-Blue `#627eea`)
+  - USDT → UNI (Turquoise `#14b8a6`)
+  - GHO → ARB (Violet `#b06fff`)
+- **Strategy IDs**: 6-digit hash identifiers from transaction IDs
+- **Visual Feedback**: Glowing progress bars matching the hydroponic tower aesthetic
+- **Real-time Status**: Shows conversion percentage and remaining amount
+
+---
+
 ## ⚙️ Challenges I Ran Into
 
 Building Flowra combined DeFi automation, 3D visualization, and on-chain donation logic — which surfaced several key challenges:
@@ -142,13 +169,17 @@ These challenges pushed us to blend smart contract design, UI performance tuning
 
 ## 💡 Roadmap
 
-- [ ] On-chain DCA automation module
-- [ ] Multi-network donation tracking
-- [ ] 3D hydroponic tower implementation
+- [x] Streamlined 6-step DCA wizard UI
+- [x] Active strategy dashboard with progress tracking
+- [x] Color-coded token visualization
+- [x] Arbitrum network integration (UI ready)
+- [ ] On-chain DCA automation via Uniswap Hooks
+- [ ] Multi-network support (Ethereum, Base)
+- [ ] 3D hydroponic tower Three.js implementation
 - [ ] Integration with Gitcoin & Giveth APIs
-- [ ] Mobile adaptive 3D viewport
 - [ ] Wallet connection (MetaMask, Rainbow, WalletConnect)
 - [ ] Smart contract audit & deployment
+- [ ] Mobile adaptive 3D viewport
 
 ---
 

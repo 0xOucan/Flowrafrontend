@@ -14,16 +14,15 @@ const steps = [
   { id: 1, name: "Select Chain", description: "Choose network" },
   { id: 2, name: "Input Token", description: "What you're spending" },
   { id: 3, name: "Output Token", description: "What you're buying" },
-  { id: 4, name: "Investment Plan", description: "Total & frequency" },
+  { id: 4, name: "Investment Plan", description: "Total amount" },
   { id: 5, name: "Impact & Projects", description: "Donations" },
-  { id: 6, name: "Configure Yield", description: "Aave staking" },
-  { id: 7, name: "Review", description: "Confirm details" },
+  { id: 6, name: "Review", description: "Confirm details" },
 ]
 
 const chains = [
-  { id: "ethereum", name: "Ethereum", icon: "⟠" },
-  { id: "arbitrum", name: "Arbitrum", icon: "🔷" },
-  { id: "base", name: "Base", icon: "🔵" },
+  { id: "ethereum", name: "Ethereum", icon: "⟠", disabled: true },
+  { id: "arbitrum", name: "Arbitrum", icon: "🔷", disabled: false },
+  { id: "base", name: "Base", icon: "🔵", disabled: true },
 ]
 
 const stablecoins = [
@@ -36,9 +35,8 @@ const stablecoins = [
 const outputTokens = [
   { symbol: "WETH", name: "Wrapped Ether", apy: "3.1%", chains: ["ethereum", "arbitrum", "base"], price: 3200 },
   { symbol: "WBTC", name: "Wrapped Bitcoin", apy: "0.8%", chains: ["ethereum", "arbitrum"], price: 65000 },
-  { symbol: "USDC", name: "USD Coin", apy: "4.2%", chains: ["ethereum", "arbitrum", "base"], price: 1 },
-  { symbol: "USDT", name: "Tether USD", apy: "4.5%", chains: ["ethereum", "arbitrum"], price: 1 },
-  { symbol: "DAI", name: "Dai Stablecoin", apy: "5.1%", chains: ["ethereum", "arbitrum", "base"], price: 1 },
+  { symbol: "UNI", name: "Uniswap", apy: "2.4%", chains: ["ethereum", "arbitrum", "base"], price: 12 },
+  { symbol: "ARB", name: "Arbitrum", apy: "5.2%", chains: ["arbitrum"], price: 0.85 },
 ]
 
 const frequencies = [
@@ -103,6 +101,15 @@ const projects = [
     raised: 67000,
     goal: 140000,
   },
+  {
+    id: 7,
+    name: "Flowra",
+    category: "Public Good",
+    location: "Web3",
+    image: "/placeholder-logo.png",
+    raised: 12000,
+    goal: 50000,
+  },
 ]
 
 export function DCASetupWizard() {
@@ -112,11 +119,8 @@ export function DCASetupWizard() {
     inputToken: "", // What you're spending
     outputToken: "", // What you're buying
     totalInvestment: "", // Total amount to invest
-    amountPerPeriod: "", // Amount per purchase
-    frequency: "",
-    donationPercent: 5,
-    selectedProjects: [] as number[], // Array of project IDs
-    autoStake: true,
+    donationPercent: 1,
+    selectedProjects: [7] as number[], // Array of project IDs - Flowra default
   })
 
   const updateFormData = (field: string, value: any) => {
@@ -137,7 +141,6 @@ export function DCASetupWizard() {
 
   const selectedInputToken = stablecoins.find((t) => t.symbol === formData.inputToken)
   const selectedOutputToken = outputTokens.find((t) => t.symbol === formData.outputToken)
-  const selectedFrequency = frequencies.find((f) => f.value === formData.frequency)
   const availableStablecoins = formData.chain
     ? stablecoins.filter((t) => t.chains.includes(formData.chain))
     : stablecoins
@@ -145,20 +148,19 @@ export function DCASetupWizard() {
     ? outputTokens.filter((t) => t.chains.includes(formData.chain))
     : outputTokens
 
-  const calculatedDuration =
-    formData.totalInvestment && formData.amountPerPeriod
-      ? Math.ceil(Number.parseFloat(formData.totalInvestment) / Number.parseFloat(formData.amountPerPeriod))
-      : 0
-
-  const estimatedOutputPerPurchase =
-    formData.amountPerPeriod && selectedOutputToken
-      ? (Number.parseFloat(formData.amountPerPeriod) / selectedOutputToken.price).toFixed(6)
-      : "0"
-
   const totalEstimatedOutput =
-    calculatedDuration && estimatedOutputPerPurchase
-      ? (Number.parseFloat(estimatedOutputPerPurchase) * calculatedDuration).toFixed(6)
+    formData.totalInvestment && selectedOutputToken
+      ? (Number.parseFloat(formData.totalInvestment) / selectedOutputToken.price).toFixed(6)
       : "0"
+
+  // Calculate estimated impact
+  const annualYield =
+    formData.totalInvestment && selectedOutputToken
+      ? Number.parseFloat(formData.totalInvestment) * (Number.parseFloat(selectedOutputToken.apy) / 100)
+      : 0
+  const annualImpact = annualYield * (formData.donationPercent / 100)
+  const monthlyImpact = annualImpact / 12
+  const dailyImpact = annualImpact / 365
 
   const toggleProject = (projectId: number) => {
     setFormData((prev) => ({
@@ -217,12 +219,18 @@ export function DCASetupWizard() {
                 <button
                   key={chain.id}
                   onClick={() => {
-                    updateFormData("chain", chain.id)
-                    updateFormData("inputToken", "")
-                    updateFormData("outputToken", "")
+                    if (!chain.disabled) {
+                      updateFormData("chain", chain.id)
+                      updateFormData("inputToken", "")
+                      updateFormData("outputToken", "")
+                    }
                   }}
+                  disabled={chain.disabled}
                   className={cn(
-                    "p-6 rounded-lg border-2 text-center transition-all hover:border-primary/50",
+                    "p-6 rounded-lg border-2 text-center transition-all",
+                    chain.disabled
+                      ? "opacity-40 cursor-not-allowed border-border bg-muted"
+                      : "hover:border-primary/50",
                     formData.chain === chain.id
                       ? "border-primary bg-primary/5 glow-turquoise"
                       : "border-border bg-card",
@@ -230,6 +238,7 @@ export function DCASetupWizard() {
                 >
                   <div className="text-4xl mb-3">{chain.icon}</div>
                   <p className="font-semibold">{chain.name}</p>
+                  {chain.disabled && <p className="text-xs text-muted-foreground mt-1">Coming Soon</p>}
                 </button>
               ))}
             </div>
@@ -257,12 +266,9 @@ export function DCASetupWizard() {
                   )}
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-lg font-bold text-primary">{token.symbol.slice(0, 2)}</span>
-                    </div>
+                    <h3 className="font-semibold text-lg">{token.symbol}</h3>
                     {formData.inputToken === token.symbol && <Check className="w-5 h-5 text-primary" />}
                   </div>
-                  <h3 className="font-semibold text-lg mb-1">{token.symbol}</h3>
                   <p className="text-sm text-muted-foreground mb-2">{token.name}</p>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">Aave APY:</span>
@@ -307,12 +313,9 @@ export function DCASetupWizard() {
                   )}
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
-                      <span className="text-lg font-bold text-accent">{token.symbol.slice(0, 2)}</span>
-                    </div>
+                    <h3 className="font-semibold text-lg">{token.symbol}</h3>
                     {formData.outputToken === token.symbol && <Check className="w-5 h-5 text-accent" />}
                   </div>
-                  <h3 className="font-semibold text-lg mb-1">{token.symbol}</h3>
                   <p className="text-sm text-muted-foreground mb-2">{token.name}</p>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">Price:</span>
@@ -324,12 +327,15 @@ export function DCASetupWizard() {
           </div>
         )}
 
-        {/* Step 4: Investment Plan - Total, Amount per Period, Frequency */}
+        {/* Step 4: Investment Plan - Total Amount Only */}
         {currentStep === 4 && (
           <div className="space-y-6">
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold">Configure Investment Plan</h2>
-              <p className="text-muted-foreground">Set your total investment and purchase frequency</p>
+              <h2 className="text-2xl font-bold">Configure Investment Amount</h2>
+              <p className="text-muted-foreground">
+                Set your total DCA investment. The system will automatically execute micro-trades at optimal average
+                prices via Uniswap Hooks.
+              </p>
             </div>
 
             <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20 p-6">
@@ -353,23 +359,22 @@ export function DCASetupWizard() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="totalInvestment">Total DCA Investment ({formData.inputToken})</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                    <Input
-                      id="totalInvestment"
-                      type="number"
-                      placeholder="100"
-                      value={formData.totalInvestment}
-                      onChange={(e) => updateFormData("totalInvestment", e.target.value)}
-                      className="pl-7 text-lg h-12"
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">Total amount you want to invest over time</p>
+                  <Input
+                    id="totalInvestment"
+                    type="number"
+                    placeholder="100"
+                    value={formData.totalInvestment}
+                    onChange={(e) => updateFormData("totalInvestment", e.target.value)}
+                    className="text-lg h-12"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Total amount to be converted to {formData.outputToken} via automated micro-trades
+                  </p>
                 </div>
 
                 {/* Quick total amount buttons */}
-                <div className="grid grid-cols-4 gap-2">
-                  {[100, 500, 1000, 5000].map((amount) => (
+                <div className="grid grid-cols-5 gap-2">
+                  {[10, 100, 250, 500, 1000].map((amount) => (
                     <Button
                       key={amount}
                       variant="outline"
@@ -382,102 +387,16 @@ export function DCASetupWizard() {
                 </div>
               </div>
 
-              {/* Frequency selection */}
-              <div className="space-y-3">
-                <Label>Purchase Frequency</Label>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {frequencies.map((freq) => (
-                    <button
-                      key={freq.value}
-                      onClick={() => updateFormData("frequency", freq.value)}
-                      className={cn(
-                        "p-4 rounded-lg border-2 text-left transition-all hover:border-primary/50",
-                        formData.frequency === freq.value
-                          ? "border-primary bg-primary/5 glow-turquoise"
-                          : "border-border bg-card",
-                      )}
-                    >
-                      <div className="flex items-start justify-between mb-1">
-                        <h3 className="font-semibold">{freq.label}</h3>
-                        {formData.frequency === freq.value && <Check className="w-5 h-5 text-primary" />}
-                      </div>
-                      <p className="text-sm text-muted-foreground">{freq.description}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Amount per Period */}
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="amountPerPeriod">
-                    Amount per {formData.frequency ? selectedFrequency?.label.toLowerCase() : "period"} (
-                    {formData.inputToken})
-                  </Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                    <Input
-                      id="amountPerPeriod"
-                      type="number"
-                      placeholder="10"
-                      value={formData.amountPerPeriod}
-                      onChange={(e) => updateFormData("amountPerPeriod", e.target.value)}
-                      className="pl-7 text-lg h-12"
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    How much to invest each {formData.frequency ? selectedFrequency?.label.toLowerCase() : "period"}
-                  </p>
-                </div>
-
-                {/* Quick amount per period buttons */}
-                <div className="grid grid-cols-4 gap-2">
-                  {[10, 25, 50, 100].map((amount) => (
-                    <Button
-                      key={amount}
-                      variant="outline"
-                      onClick={() => updateFormData("amountPerPeriod", amount.toString())}
-                      className={cn(formData.amountPerPeriod === amount.toString() && "border-primary bg-primary/5")}
-                    >
-                      ${amount}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Duration calculation and summary */}
-              {formData.totalInvestment && formData.amountPerPeriod && formData.frequency && calculatedDuration > 0 && (
+              {/* Estimated Output */}
+              {formData.totalInvestment && selectedOutputToken && (
                 <Card className="bg-accent/5 border-accent/20 p-6 space-y-4">
-                  <h3 className="font-semibold text-lg">Investment Summary</h3>
-                  <div className="grid sm:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Duration</p>
-                      <p className="text-2xl font-bold text-accent">
-                        {calculatedDuration} {selectedFrequency?.label.toLowerCase()}s
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Per purchase</p>
-                      <p className="text-2xl font-bold">
-                        ${formData.amountPerPeriod} {formData.inputToken}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Total output</p>
-                      <p className="text-2xl font-bold text-accent">
-                        ~{totalEstimatedOutput} {formData.outputToken}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="pt-3 border-t border-border">
-                    <p className="text-sm text-muted-foreground">
-                      You'll spend <span className="font-semibold">${formData.totalInvestment}</span> over{" "}
-                      <span className="font-semibold">{calculatedDuration}</span>{" "}
-                      {selectedFrequency?.label.toLowerCase()}s, buying approximately{" "}
-                      <span className="font-semibold text-accent">
-                        {totalEstimatedOutput} {formData.outputToken}
-                      </span>{" "}
-                      at current prices.
+                  <h3 className="font-semibold text-lg">Estimated Output</h3>
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-2">You'll receive approximately</p>
+                    <p className="text-4xl font-bold text-accent mb-1">~{totalEstimatedOutput}</p>
+                    <p className="text-xl font-semibold text-accent">{formData.outputToken}</p>
+                    <p className="text-xs text-muted-foreground mt-3">
+                      Based on current price of ${selectedOutputToken.price.toLocaleString()}
                     </p>
                   </div>
                 </Card>
@@ -506,12 +425,13 @@ export function DCASetupWizard() {
               <Slider
                 value={[formData.donationPercent]}
                 onValueChange={(value) => updateFormData("donationPercent", value[0])}
+                min={1}
                 max={20}
                 step={1}
                 className="py-4"
               />
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>0%</span>
+                <span>1%</span>
                 <span>10%</span>
                 <span>20%</span>
               </div>
@@ -577,87 +497,8 @@ export function DCASetupWizard() {
           </div>
         )}
 
-        {/* Step 6: Configure Yield */}
+        {/* Step 6: Review */}
         {currentStep === 6 && (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold">Configure Yield Strategy</h2>
-              <p className="text-muted-foreground">Set up automatic staking to earn yield on your investments</p>
-            </div>
-
-            <div className="space-y-6">
-              {/* Auto-stake toggle */}
-              <Card className="bg-muted/50 p-6 space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <h3 className="font-semibold">Auto-Supply to Aave v3</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Automatically supply purchased {formData.outputToken} to Aave for yield
-                    </p>
-                  </div>
-                  <Button
-                    variant={formData.autoStake ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => updateFormData("autoStake", !formData.autoStake)}
-                  >
-                    {formData.autoStake ? "Enabled" : "Disabled"}
-                  </Button>
-                </div>
-                {formData.autoStake && selectedOutputToken && (
-                  <div className="pt-2 border-t border-border">
-                    <p className="text-sm">
-                      <span className="text-muted-foreground">Expected APY:</span>{" "}
-                      <span className="font-semibold text-primary">{selectedOutputToken.apy}</span>
-                    </p>
-                  </div>
-                )}
-              </Card>
-
-              {/* Impact preview */}
-              {formData.totalInvestment &&
-                formData.autoStake &&
-                selectedOutputToken &&
-                formData.donationPercent > 0 && (
-                  <Card className="bg-accent/5 border-accent/20 p-6 space-y-3">
-                    <h3 className="font-semibold text-lg flex items-center gap-2">
-                      <Heart className="w-5 h-5 text-accent" />
-                      Estimated Impact
-                    </h3>
-                    <div className="space-y-2">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Annual yield generated</p>
-                        <p className="text-2xl font-bold">
-                          $
-                          {(
-                            Number.parseFloat(formData.totalInvestment) *
-                            (Number.parseFloat(selectedOutputToken.apy) / 100)
-                          ).toFixed(2)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">
-                          Donated to {formData.selectedProjects.length || "selected"} project
-                          {formData.selectedProjects.length !== 1 ? "s" : ""}
-                        </p>
-                        <p className="text-3xl font-bold text-accent">
-                          $
-                          {(
-                            Number.parseFloat(formData.totalInvestment) *
-                            (Number.parseFloat(selectedOutputToken.apy) / 100) *
-                            (formData.donationPercent / 100)
-                          ).toFixed(2)}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">per year</p>
-                      </div>
-                    </div>
-                  </Card>
-                )}
-            </div>
-          </div>
-        )}
-
-        {/* Step 7: Review */}
-        {currentStep === 7 && (
           <div className="space-y-6">
             <div className="space-y-2">
               <h2 className="text-2xl font-bold">Review Your Strategy</h2>
@@ -667,33 +508,27 @@ export function DCASetupWizard() {
             <div className="space-y-4">
               <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20 p-6">
                 <h3 className="font-semibold text-lg mb-4">DCA Strategy</h3>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-6">
                   <div className="text-center flex-1">
-                    <p className="text-sm text-muted-foreground mb-2">Spending</p>
-                    <p className="text-3xl font-bold text-primary mb-1">${formData.amountPerPeriod}</p>
-                    <p className="text-lg font-semibold text-primary">{formData.inputToken}</p>
-                    <p className="text-xs text-muted-foreground mt-1">per {selectedFrequency?.label.toLowerCase()}</p>
+                    <p className="text-sm text-muted-foreground mb-2">Input Token</p>
+                    <p className="text-3xl font-bold text-primary">{formData.inputToken}</p>
                   </div>
                   <div className="px-6">
                     <ArrowRight className="w-10 h-10 text-muted-foreground" />
                   </div>
                   <div className="text-center flex-1">
-                    <p className="text-sm text-muted-foreground mb-2">Buying</p>
-                    <p className="text-3xl font-bold text-accent mb-1">~{estimatedOutputPerPurchase}</p>
-                    <p className="text-lg font-semibold text-accent">{formData.outputToken}</p>
-                    <p className="text-xs text-muted-foreground mt-1">per {selectedFrequency?.label.toLowerCase()}</p>
+                    <p className="text-sm text-muted-foreground mb-2">Output Token</p>
+                    <p className="text-3xl font-bold text-accent">{formData.outputToken}</p>
                   </div>
                 </div>
-                <div className="mt-6 pt-4 border-t border-border grid sm:grid-cols-3 gap-4 text-center">
+                <div className="grid sm:grid-cols-3 gap-4 text-center">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Duration</p>
-                    <p className="text-xl font-bold">
-                      {calculatedDuration} {selectedFrequency?.label.toLowerCase()}s
-                    </p>
+                    <p className="text-sm text-muted-foreground mb-1">Investment Amount</p>
+                    <p className="text-xl font-bold">${formData.totalInvestment}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Total Investment</p>
-                    <p className="text-xl font-bold">${formData.totalInvestment}</p>
+                    <p className="text-sm text-muted-foreground mb-1">Expected APY</p>
+                    <p className="text-xl font-bold text-primary">{selectedOutputToken?.apy}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Network</p>
@@ -702,24 +537,35 @@ export function DCASetupWizard() {
                 </div>
               </Card>
 
-              <Card className="bg-muted/50 p-4 space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Auto-supply to Aave</span>
-                  <span className="font-semibold">{formData.autoStake ? "Yes" : "No"}</span>
-                </div>
-                {formData.autoStake && selectedOutputToken && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Expected APY</span>
-                    <span className="font-semibold text-primary">{selectedOutputToken.apy}</span>
+              <Card className="bg-accent/5 border-accent/20 p-6">
+                <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                  <Heart className="w-5 h-5 text-accent" />
+                  Estimated Impact
+                </h3>
+                <div className="grid sm:grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-2">Annual Donation</p>
+                    <p className="text-2xl font-bold text-accent">${annualImpact.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">per year</p>
                   </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Donation %</span>
-                  <span className="font-semibold text-accent">{formData.donationPercent}%</span>
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-2">Monthly Donation</p>
+                    <p className="text-2xl font-bold text-accent">${monthlyImpact.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">per month</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-2">Daily Donation</p>
+                    <p className="text-2xl font-bold text-accent">${dailyImpact.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">per day</p>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Projects supported</span>
-                  <span className="font-semibold">{formData.selectedProjects.length}</span>
+                <div className="mt-4 pt-4 border-t border-accent/20 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-semibold text-accent">{formData.donationPercent}%</span> of your{" "}
+                    <span className="font-semibold">${annualYield.toFixed(2)}</span> annual yield supporting{" "}
+                    <span className="font-semibold">{formData.selectedProjects.length}</span> project
+                    {formData.selectedProjects.length !== 1 ? "s" : ""}
+                  </p>
                 </div>
               </Card>
 
@@ -745,36 +591,6 @@ export function DCASetupWizard() {
                 </Card>
               )}
 
-              <Card className="bg-primary/5 border-primary/20 p-6 space-y-4">
-                <h3 className="font-semibold text-lg">Summary</h3>
-                <div className="space-y-2 text-sm">
-                  <p>
-                    You will spend{" "}
-                    <span className="font-semibold">
-                      ${formData.amountPerPeriod} {formData.inputToken}
-                    </span>{" "}
-                    every <span className="font-semibold">{formData.frequency}</span> to buy{" "}
-                    <span className="font-semibold text-accent">{formData.outputToken}</span> on{" "}
-                    <span className="font-semibold capitalize">{formData.chain}</span>.
-                  </p>
-                  <p>
-                    Total investment: <span className="font-semibold">${formData.totalInvestment}</span> over{" "}
-                    <span className="font-semibold">{calculatedDuration}</span> {selectedFrequency?.label.toLowerCase()}
-                    s.
-                  </p>
-                  {formData.autoStake && selectedOutputToken && (
-                    <p>
-                      Your {formData.outputToken} will automatically supply to Aave v3 for an estimated{" "}
-                      <span className="font-semibold text-primary">{selectedOutputToken.apy} APY</span>.
-                    </p>
-                  )}
-                  <p>
-                    <span className="font-semibold text-accent">{formData.donationPercent}%</span> of your yield will
-                    support {formData.selectedProjects.length} regenerative{" "}
-                    {formData.selectedProjects.length === 1 ? "project" : "projects"}.
-                  </p>
-                </div>
-              </Card>
             </div>
           </div>
         )}
@@ -794,8 +610,7 @@ export function DCASetupWizard() {
                 (currentStep === 1 && !formData.chain) ||
                 (currentStep === 2 && !formData.inputToken) ||
                 (currentStep === 3 && !formData.outputToken) ||
-                (currentStep === 4 &&
-                  (!formData.totalInvestment || !formData.amountPerPeriod || !formData.frequency)) ||
+                (currentStep === 4 && !formData.totalInvestment) ||
                 (currentStep === 5 && formData.selectedProjects.length === 0)
               }
             >

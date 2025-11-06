@@ -1,7 +1,18 @@
+"use client"
+
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
 import { ArrowRight, TrendingUp, Sprout, Zap } from "lucide-react"
 import Link from "next/link"
+
+// Mock DCA strategies with 6-digit hashes from txid
+const mockStrategies = [
+  { id: "a3f7e2", input: "USDC", output: "WBTC", progress: 67, amount: "$500" },
+  { id: "b8c1d5", input: "USDC", output: "WETH", progress: 42, amount: "$250" },
+  { id: "9e4f3a", input: "USDT", output: "UNI", progress: 89, amount: "$1000" },
+  { id: "7d2b6c", input: "GHO", output: "ARB", progress: 23, amount: "$100" },
+]
 
 export default function AppDashboard() {
   return (
@@ -83,6 +94,35 @@ export default function AppDashboard() {
             <p className="text-sm text-muted-foreground">Impact Donated</p>
             <p className="text-2xl font-bold text-primary">$0.00</p>
           </div>
+        </div>
+      </Card>
+
+      {/* Active DCA Strategies */}
+      <Card className="glass-panel p-6">
+        <h2 className="text-xl font-semibold mb-4">Active DCA Strategies</h2>
+        <div className="space-y-4">
+          {mockStrategies.map((strategy) => (
+            <div key={strategy.id} className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-primary">{strategy.input}</span>
+                    <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-semibold text-accent">{strategy.output}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground font-mono">#{strategy.id}</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-muted-foreground">{strategy.amount}</span>
+                  <span className="text-sm font-semibold">{strategy.progress}%</span>
+                </div>
+              </div>
+              <Progress value={strategy.progress} className="h-2" />
+              <p className="text-xs text-muted-foreground">
+                {strategy.progress}% of {strategy.input} converted to {strategy.output}
+              </p>
+            </div>
+          ))}
         </div>
       </Card>
 
