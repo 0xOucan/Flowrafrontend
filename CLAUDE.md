@@ -4,16 +4,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Flowra is a crypto DeFi application that combines automated Dollar-Cost Averaging (DCA) with yield farming and regenerative project donations. The tagline is "Plant your crypto, grow impact" - users can automate crypto investments, earn yield through Aave, and donate portions to environmental/regenerative projects.
+Flowra is a **DeFi dApp for the Octant DeFi Hackathon 2025** that automates Dollar-Cost Averaging (DCA) investing via Uniswap v4 Hooks, generates yield through Aave v3, and programmatically allocates 1-20% of realized yield to public goods projects using **Octant v2's Yield Donating Vaults**.
 
-**Current Status**: This is a demo/mockup showcasing the UI/UX. Smart contract integration is planned but not yet implemented.
+**Tagline**: "Plant your crypto, grow impact"
 
-**Documentation**: See `README.md` for comprehensive project information, deployment instructions, and feature roadmap.
+**Hackathon**: [Octant DeFi Hackathon 2025](https://dorahacks.io/hackathon/octant-defi-2025) | Submission: November 9, 2025
+
+**Current Status**: UI/UX complete with mock data. Smart contract integration with Octant v2, Aave v3, and Uniswap v4 Hooks in active development.
+
+**Target Prizes**:
+- Best use of Yield Donating Strategy ($2,000 x2)
+- Best public goods projects ($1,500 x2)
+- Best use of Aave v3 ($2,500)
+- Best Use of Uniswap v4 Hooks ($2,500)
+- Most creative use of Octant v2 ($1,500)
+
+**Documentation**: See `README.md` for comprehensive hackathon information, prize categories, and technical architecture.
 
 **License**: Apache License 2.0 (see `LICENSE` file)
 
 ## Tech Stack
 
+### Frontend
 - **Framework**: Next.js 16 with App Router (React 19)
 - **Styling**: Tailwind CSS v4 with custom design system
 - **UI Components**: shadcn/ui (Radix UI primitives) in "new-york" style
@@ -21,6 +33,14 @@ Flowra is a crypto DeFi application that combines automated Dollar-Cost Averagin
 - **Icons**: Lucide React
 - **Fonts**: Space Grotesk (sans) and IBM Plex Mono (mono)
 - **Analytics**: Vercel Analytics
+- **3D Visualization**: Three.js *(planned)*
+
+### DeFi Integration (In Development)
+- **Vault Infrastructure**: Octant v2 (ERC-4626 compliant vaults)
+- **Yield Generation**: Aave v3 (ATokenVault)
+- **DCA Automation**: Uniswap v4 Hooks
+- **Web3**: viem / wagmi
+- **Networks**: Arbitrum (live UI), Ethereum & Base (coming soon)
 
 ## Development Commands
 
@@ -67,14 +87,22 @@ The application has a **dual-layout structure** with two distinct entry points:
 ## Key Components
 
 ### DCA Setup Wizard (`components/dca-setup-wizard.tsx`)
-Multi-step form for setting up DCA strategies:
-1. Select Chain (Ethereum, Arbitrum, Base)
-2. Choose Input Token (stablecoins: USDC, USDT, DAI, GHO)
-3. Choose Output Token (WETH, WBTC, or stablecoins)
-4. Investment Plan (total amount + frequency: daily/weekly/biweekly/monthly)
-5. Impact & Projects (donation allocation to regenerative projects)
-6. Configure Yield (Aave staking configuration)
-7. Review & Confirm
+Streamlined 6-step form for setting up DCA strategies:
+
+1. **Select Chain**: Arbitrum (live), Ethereum & Base (grayed out, coming soon)
+2. **Choose Input Token**: Whitelisted stablecoins (USDC, USDT, DAI, GHO)
+3. **Choose Output Token**: WETH, WBTC, UNI, ARB
+4. **Investment Plan**:
+   - Total investment only (no frequency selection)
+   - Quick amount buttons: $10, $100, $250, $500, $1000
+   - Automated via Uniswap v4 Hooks (micro-trades for optimal DCA)
+5. **Impact & Projects**:
+   - Donation slider: 1-20% of yield
+   - Flowra (Web3, Public Good) pre-selected as default
+   - Support multiple regenerative projects
+6. **Review & Confirm**: Shows annual/monthly/daily impact estimates with APY calculations
+
+**Note**: Removed frequency/amount-per-period selection. DCA automation happens via Uniswap Hooks with micro-trades.
 
 ### Projects Components
 - `projects-grid.tsx` - Grid display of regenerative projects
@@ -126,15 +154,28 @@ Currently no global state management library. App uses:
 - Component-level state with `useState`
 - React Hook Form for form state
 
-## DCA Workflow Concepts
+## DCA Workflow & Octant Integration
 
-1. User selects blockchain network
-2. Chooses input token (what they're spending) - typically stablecoins
-3. Chooses output token (what they're buying) - could be ETH, BTC, or stablecoins
-4. Sets total investment amount and frequency
-5. Allocates percentage of yield to regenerative projects
-6. Configures Aave yield farming parameters
-7. Reviews and confirms the automated DCA strategy
+### User Flow (6 Steps)
+1. **Select Network**: Arbitrum (live), Ethereum & Base (coming soon)
+2. **Input Token**: Whitelisted stablecoins (USDC, USDT, DAI, GHO)
+3. **Output Token**: WETH, WBTC, UNI, ARB
+4. **Total Investment**: $10 to $1000+ (no frequency selection needed)
+5. **Impact Allocation**: 1-20% of realized yield to public goods projects
+6. **Review & Confirm**: See estimated annual/monthly/daily impact
+
+### Behind the Scenes (Smart Contract Flow)
+1. **Deposit**: User deposits stablecoins into Octant v2 Yield Vault (ERC-4626)
+2. **Yield Generation**: Vault deposits into Aave v3 (ATokenVault) to earn yield
+3. **DCA Automation**: Uniswap v4 Hooks execute micro-trades on every pool interaction
+4. **Yield Routing**: Octant's programmatic allocation routes 1-20% to public goods projects
+5. **Growth Visualization**: 3D hydroponic tower displays real-time impact
+
+### Key Technical Concepts
+- **ERC-4626 Vaults**: Standardized vault interface for composability
+- **Uniswap v4 Hooks**: Autonomous DCA execution without keeper bots
+- **Programmatic Allocation**: On-chain yield routing to selected projects
+- **Non-Custodial**: Users maintain full control; funds stay in audited contracts
 
 ## Deployment
 
